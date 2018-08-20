@@ -1,18 +1,17 @@
 ---
 title: "R package CTRE: thresholding bursty time series"
-author: Peter Straka
+author: "Peter Straka"
 date: '2018-05-11'
 slug: ctre-package
 categories:
-  - Software
+  - software
 tags:
-  - Software
-  - Bursts
+  - software
+  - bursts
   - extremes
-  - Heavy Tails
+  - heavy-tails
   - R
-  - R package
-draft: yes
+  - R-package
 math: yes
 summary: |
     The R package is now available on CRAN. It Models extremes of 'bursty'
