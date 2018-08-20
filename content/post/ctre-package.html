@@ -1,0 +1,154 @@
+---
+title: "R package CTRE: thresholding bursty time series"
+author: Peter Straka
+date: '2018-05-11'
+slug: ctre-package
+categories:
+  - software
+tags:
+  - software
+  - bursts
+  - extremes
+  - heavy-tails
+  - R
+  - R-package
+draft: yes
+math: yes
+summary: |
+    The R package is now available on CRAN. It Models extremes of 'bursty'
+    time series via Continuous Time Random Exceedances (CTRE). 
+    (See [companion paper](https://strakaps.github.io/bursty-POT/).)
+image: https://strakaps.github.io/post/ctre-package_files/figure-html/data-plot-1.png
+---
+
+
+
+<p>The new <a href="https://strakaps.github.io/CTRE/">R package <code>CTRE</code></a> is now
+available on CRAN. “CTRE” stands for “Continuous Time Random Exceedances”,
+which is a model for extreme values of bursty time series.
+The theory is desribed in another paper
+(<a href="https://strakaps.github.io/bursty-POT/">html</a>|<a href="https://arxiv.org/pdf/1802.05218.pdf">pdf</a>).</p>
+<pre class="r"><code>library(CTRE)
+flares_ctre &lt;- ctre(flares)
+plot(flares_ctre, log = &quot;y&quot;, main = &quot;Solar Flares&quot;)</code></pre>
+<p><img src="/post/ctre-package_files/figure-html/data-plot-1.png" width="672" /></p>
+<p>The above time series are measurements of solar flare magnitudes by NASA<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.
+Which observations are considered extreme is defined by a variable threshold <span class="math inline">\(u\)</span>
+(dashed line, <span class="math inline">\(&lt; 5\%\)</span> of observations).
+The exceedances of this threshold (red) follow (asymptotically for high <span class="math inline">\(u\)</span>)
+a
+<a href="https://en.wikipedia.org/wiki/Generalized_Pareto_distribution">Generalized Pareto distribution</a>.
+This type of modelling of extremes is standard in Extreme Value Theory,
+and known as the
+<a href="https://en.wikipedia.org/wiki/Extreme_value_theory#Data_analysis">Peaks Over Threshold</a>
+(POT) method.
+To date,
+<a href="https://cran.r-project.org/web/views/ExtremeValue.html"><em>18 R packages</em></a>
+have been developed for POT!</p>
+<div id="whats-new-about-ctre" class="section level2">
+<h2>What’s new about <code>CTRE</code>?</h2>
+<p><code>CTRE</code> provides a new way to model the <strong>bursty timing</strong> of the threshold
+crossings. In complex systems, <em>inter-event times</em> are typically
+heavy-tailed<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, and thus highly heterogeneous
+(think income distributions).
+The bulk of inter-event times is short, corresponding to bursts of events.
+A few very long inter-event times represent quiet periods.</p>
+<p>The <a href="https://strakaps.github.io/MittagLeffleR/">Mittag-Leffler distribution</a>
+is universal for times between threshold crossings, see the
+<a href="https://strakaps.github.io/bursty-POT/">companion paper</a>.
+<code>CTRE</code> fits a Mittag-Leffler distribution to a range of threshold values:</p>
+<pre class="r"><code>flares_ctre &lt;- thin(flares_ctre, k = 700)
+par(mfrow = c(1,2))
+MLestimates(flares_ctre, tail = 0.9, scale = 3E7)</code></pre>
+<p><img src="/post/ctre-package_files/figure-html/stability-plot-1.png" width="672" /></p>
+<p>Above, the threshold is varied from the 5th to the 700th largest magnitude
+(as you move right along the x-axes)
+and the parameters estimates are plotted on the y-axis.
+For both panels, towards the left (exceedances=5), only few data are available,
+and the estimate has a high variance.
+Towards the right (exceedances = 700), the threshold is low, and the
+Mittag-Leffler fit degrades (high bias).
+In between is where we want to read off our (hopefully stable) parameter
+estimates. The above plots are hence called “stability plots”.</p>
+<dl>
+<dt>Important:</dt>
+<dd><p>The scale parameter is proportional to <span class="math inline">\(k^{-1/\beta}\)</span>.
+The parameter <span class="math inline">\(\beta\)</span> is hence used to rescale the y-values of the
+right-hand plot, in order to make the estimates constant, and needs to
+estimated from the left-hand plot first.</p>
+</dd>
+</dl>
+</div>
+<div id="ctre-applied-to-data" class="section level2">
+<h2><code>CTRE</code> applied to data</h2>
+<p>For the solar flare data, we read off
+<span class="math display">\[
+\beta \approx 0.9, \quad \sigma \approx 3 \times 10^7.
+\]</span>
+This means that the inter-arrival time <span class="math inline">\(T(k)\)</span> for magnitudes as high as the
+<span class="math inline">\(k\)</span>-th magnitude is distributed as
+<span class="math display">\[
+T(k) \sim {\rm ML}\left(0.9, \frac{3 \times 10^7 {\rm sec}}{k^{1/0.9}} \right).
+\]</span>
+For example, let’s assume the magnitude (peak rate) <span class="math inline">\(10,000\)</span>. How many
+magnitudes exceed it?</p>
+<pre class="r"><code>library(magrittr)
+(flares_ctre %&gt;% magnitudes() %&gt;% sort(decreasing=TRUE) &gt; 10000) %&gt;% sum()</code></pre>
+<pre><code>## [1] 24</code></pre>
+<p>So substitute <span class="math inline">\(k = 24\)</span>. The model thus predicts inter-arrival times drawn from the
+distribution
+<span class="math display">\[
+{\rm ML}\left(0.9, 8.8\times 10^{5} {\rm sec} \right)
+= {\rm ML}\left(0.9, 10 {\rm days} \right).
+\]</span></p>
+<p>Here’s the plot of this distribution, on a logarithmic scale:</p>
+<p><img src="/post/ctre-package_files/figure-html/unnamed-chunk-2-1.png" width="480" /></p>
+<p>Compared to the Exponential distribution, the Mittag-Leffler distribution
+puts more probability mass on both tiny values (bursts) and
+values in the tails (quiet periods).</p>
+</div>
+<div id="shiny-app" class="section level2">
+<h2>Shiny app</h2>
+<p>Running</p>
+<pre class="r"><code>CTRE::runCTREshiny()</code></pre>
+<p>opens a Shiny app that that lets you do the above manipulations via sliders.
+It is / should be loading below:</p>
+<iframe src="https://strakaps.shinyapps.io/ctre-app/" style="border: none; width: 800px; height: 900px">
+</iframe>
+</div>
+<div id="what-about-clustering-of-extremes" class="section level2">
+<h2>What about “clustering of extremes”?</h2>
+<p>The main other appraoch in Extreme Value Theory which addresses irregular
+(non-Poissonian) threshold crossing times goes under the name
+“clustering of extremes”.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> It assumes that the underlying
+process is stationary, and conflates each excursion of the process
+above the threshold as one cluster of events.</p>
+<p>CTREs and clustering of extremes both generalize the standard
+assumption of independent events, but in
+different directions. They are hence complementary, and it needs to be
+investigated how they should be compared meaningfully.</p>
+</div>
+<div id="feedback" class="section level2">
+<h2>Feedback</h2>
+<p>Do you think CTREs are a useful model? Please comment below.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The <a href="https://ntrs.nasa.gov/search.jsp?R=19920006736">“complete Hard X Ray Burst Spectrometer event list”</a>
+is a comprehensive reference for all measurements of the Hard X
+Ray Burst Spectrometer on NASA’s Solar Maximum Mission from the time of
+launch on Feb 14, 1980 to the end of the mission in Dec 1989. 12,776
+events were detected, with the “vast
+majority being solar flares”. The list includes the start time, peak time,
+duration, and peak rate of each event. We have used “start time” as the
+variable for event times, and “peak rate” as the variable for event
+magnitudes.<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>See the Introduction of
+<a href="http://iopscience.iop.org/article/10.1088/1367-2630/15/10/103023">“Modelling bursty time series”</a> by Vajna, Tóth &amp; Kertész, for a list of complex systems with heavy-tailed
+inter-event times.<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>See e.g. Chapter 3 in the textbook
+<a href="https://books.google.com.ph/books/about/Extremes_and_Related_Properties_of_Rando.html?id=-ofTBwAAQBAJ&amp;redir_esc=y"><em>Extremes and Related Properties of Random Sequences and Processes</em></a>
+by Leadbetter, Lindgren &amp; Rootzén.<a href="#fnref3" class="footnote-back">↩</a></p></li>
+</ol>
+</div>

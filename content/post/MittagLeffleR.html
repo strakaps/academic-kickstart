@@ -1,0 +1,122 @@
+---
+title: 'R package MittagLeffleR: Using the Mittag-Leffler distributions in R'
+author: Peter Straka
+date: '2017-06-26'
+slug: mittag-leffler
+categories:
+  - software
+tags:
+  - software
+  - R
+  - R-package
+  - heavy-tails
+  - bursts
+draft: no
+math: yes 
+summary: |
+    First version of an R package which calculates probability densities 
+    of the Mittag-Leffler families of distributions. 
+image: https://strakaps.github.io/MittagLeffleR/articles/MLdist_files/figure-html/unnamed-chunk-1-2.png
+---
+
+
+
+<p>Ricky Gill and I have created the R package MittagLeffleR,
+documented at
+<a href="../../MittagLeffleR/index.html">strakaps.github.io/MittagLeffleR/</a>.
+It is available on <a href="https://cran.r-project.org/web/packages/MittagLeffleR/index.html">CRAN</a> (and the latest development version on <a href="https://github.com/strakaps/MittagLeffleR">GitHub</a>).
+MittagLeffleR calculates both Mittag-Leffler
+distributions; i.e. probability density, cumulative distribution function,
+quantile function and fast random variate generation.
+It was made possible by the <a href="https://au.mathworks.com/matlabcentral/fileexchange/48154-the-mittag-leffler-function">Laplace inversion algorithm</a> for the
+Mittag-Leffler function by
+<a href="https://twitter.com/rgarrappa">Roberto Garrappa</a>.
+Install it via</p>
+<pre class="r"><code>install.packages(&quot;MittagLeffleR&quot;)</code></pre>
+<div id="the-two-mittag-leffler-distributions" class="section level2">
+<h2>The Two Mittag-Leffler distributions</h2>
+<p>Various journal articles (including my own) write about “the” Mittag-Leffler
+distribution, but actually there are
+<a href="https://en.wikipedia.org/wiki/Mittag-Leffler_distribution"><em>two</em> such families of distributions</a>.
+Both have a shape parameter (<code>tail</code>) taken from the interval
+<span class="math inline">\((0,1]\)</span>, but the first distribution is <em>very heavy-tailed</em> with infinite
+mean if <code>tail</code> <span class="math inline">\(\in (0,1)\)</span>
+(it is equal to the exponential distribution if <code>tail</code> <span class="math inline">\(=1\)</span>)
+whereas the second distribution is light-tailed (has finite moments
+of all orders). The boolean variable <code>second.type</code> switches between
+these two distributions.</p>
+</div>
+<div id="examples" class="section level2">
+<h2>Examples</h2>
+<div id="first-type-waiting-times-between-events" class="section level3">
+<h3>First type = waiting times between events</h3>
+<p>The first type Mittag-Leffler distribution commonly occurs for the
+<strong>inter-arrival times between events in complex systems</strong> (e.g. earthquakes, see future post).
+Suppose that for an event to happen, several “tries” are needed,
+and that each try has a duration.
+The number <span class="math inline">\(N\)</span> of tries until a success is geometrically distributed,
+and the <em>sum</em> of <span class="math inline">\(N\)</span> durations is well approximated by a Mittag-Leffler (type I) distribution (this is the <a href="https://github.com/strakaps/MittagLeffleR">geometric stable</a> property).</p>
+<p>As an example, we simulate <code>n=100</code> Mittag-Leffler (type I) random
+variables,
+and estimate their tail and scale parameters via maximum likelihood:</p>
+<pre class="r"><code>library(MittagLeffleR)
+y = rml(n = 100, tail = 0.9, scale = 2)
+mlml &lt;- function(X) {
+  log_l &lt;- function(theta) {
+    #transform parameters so can do optimization unconstrained
+    theta[1] &lt;- 1/(1+exp(-theta[1]))
+    theta[2] &lt;- exp(theta[2])
+    -sum(log(dml(X,theta[1],theta[2])))
+  }
+  ml_theta &lt;- stats::optim(c(0.5,0.5), fn=log_l)$par
+  #transform back
+  ml_a &lt;- 1/(1 + exp(-ml_theta[1]))
+  ml_d &lt;- exp(ml_theta[2])
+  return(list(&quot;tail&quot; = ml_a, &quot;scale&quot; = ml_d))
+}
+mlml(y)</code></pre>
+<pre><code>## $tail
+## [1] 0.9349602
+## 
+## $scale
+## [1] 2.044665</code></pre>
+</div>
+<div id="second-type-number-of-events" class="section level3">
+<h3>Second type = number of events</h3>
+<p>The second type Mittag-Leffler distribution typically occurs for the
+random <strong>number of events in complex systems</strong>.
+For instance, assume a random walk with heavy-tailed waiting times;
+this has become a widely adopted model for
+<a href="https://en.wikipedia.org/wiki/Anomalous_diffusion">anomalous diffusion</a>.
+For late times, its number of steps
+<a href="https://doi.org/10.1017/S002190020002043X">can be well approximated by a Mittag-Leffler (type II) distribution</a>.</p>
+<p>The time-change of a random walk by the random number of steps is called
+<em>subordination</em>; the random number of steps is approximated by the
+<a href="https://stt.msu.edu/users/mcubed/hittingTime.pdf">inverse stable subordinator</a>.
+Below we calculate the probability density of a random walker with
+step size <code>dx=0.01</code>:</p>
+<ul>
+<li>the number of steps up to time <span class="math inline">\(t\)</span> is stored in the vector <span class="math inline">\(h\)</span></li>
+<li>the matrix <span class="math inline">\(N\)</span> stores the probability distribution at the lattice
+sites at consecutive times</li>
+<li>the “subordination” happens in the matrix product <code>N %*% h</code>.</li>
+</ul>
+<pre class="r"><code>library(MittagLeffleR)
+tail &lt;- 0.65
+dx &lt;- 0.01
+x &lt;- seq(-2,5,dx)
+umax &lt;- qml(p=0.99, tail=tail, scale=1, second.type=TRUE)
+u &lt;- seq(0.01,umax,dx)
+h &lt;- dml(x=u, tail=tail, scale=1, second.type=TRUE)
+N &lt;- outer(x,u,function(x,u){dnorm(x=x, mean=u, sd=sqrt(u))})
+p &lt;- N %*% h * dx
+plot(x,p, type=&#39;l&#39;, main=&quot;Fractional diffusion with drift at t=1&quot;)</code></pre>
+<p><img src="/post/MittagLeffleR_files/figure-html/scary-shark-1.png" width="672" /></p>
+</div>
+</div>
+<div id="bugs-and-issues" class="section level2">
+<h2>Bugs and Issues</h2>
+<p>Should you run into any bugs or issues, please
+<a href="https://github.com/strakaps/MittagLeffleR/issues">let us know</a>.
+Thanks!</p>
+</div>

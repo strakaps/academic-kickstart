@@ -1,0 +1,91 @@
+---
+title: Fractional Diffusion where "fractional" varies in space
+author: Peter Straka
+date: '2017-12-18'
+slug: VOFFPE
+categories: 
+  - statistical-physics
+tags: 
+  - statistical-physics
+  - anomalous-diffusion
+  - probability
+  - stochastic-processes 
+  - publication
+draft: no
+math: yes 
+summary: |
+    A Fractional Fokker-Planck Equation is derived which scales
+    variably in space. The paper is now 
+    [published](https://doi.org/10.1016/j.physa.2018.03.010). 
+image: https://strakaps.github.io/img/voffpe.png
+---
+
+The new paper 
+([arxiv.org/abs/1712.06767](http://arxiv.org/abs/1712.06767))
+
+> *Variable Order Fractional Fokker-Planck 
+> Equations derived from Continuous Time Random Walks*
+
+is currently under review.
+
+The variable order fractional 
+Fokker-Planck equation (VOFFPE), 
+in simple form[^3], is
+$$\frac{\partial}{\partial t} p(x,t) = \frac{\partial^2}{\partial x^2} 
+\underbrace{D_t^{1-\beta(x)}}_{\text{fractional derivative}}
+p(x,t).$$
+
+[^3]: Drift and diffusivity are left out here, but they may be any 
+(Lipschitz-) continuous functions. 
+
+* If you take out the fractional derivative operator, you get the
+[**Fokker-Planck equation**](https://en.wikipedia.org/wiki/Fokker%E2%80%93Planck_equation) **(FPE)**. 
+It describes the spreading of probability via a random walk:
+
+![](/img/spreading.gif)
+
+* Adding in the
+[fractional derivative](https://en.wikipedia.org/wiki/Fractional_calculus) 
+$$D_t^{1-\beta} p(x,t) = \int_0^t p(x,t-s) \frac{s^{-\beta}}{\Gamma(1-\beta)}\,ds$$
+results in the "**fractional FPE**". The fractional derivative 
+corresponds to longs rests of a walker, and slows down the spreading (making the 
+dynamics "sub"diffusive).
+
+* Here the order $1-\beta$ of the fractional derivative varies with the 
+location $x$ of the walker, hence the name VOFFPE
+(**variable order fractional FPE**). 
+In some regions, e.g. where the intracellular matrix of a cell is dense[^4], 
+the trappingness can be stronger, which is modelled by a smaller $\beta(x)$
+in that region. 
+
+[^4]: Wong et. al, [PRL 2004](http://www.physics.emory.edu/faculty/weeks/lab/papers/Wong_04.pdf)
+
+The paper shows that the equation has a unique solution $p(x,t)$, and that 
+this solution is the probability distribution of a Continuous Time 
+Random Walk (CTRW)[^1]. 
+CTRWs are random walks with random waiting times between
+jumps:
+
+![](/img/CTRW.png)
+
+The fractional derivative in time is tightly linked with 
+[Mittag-Leffler distributed](/post/mittag-leffler/) waiting times. 
+
+[^1]: Strictly speaking, a scaling limit of a CTRW.
+
+Of course CTRWs can be simulated, and $p(x,t)$ may be computed via 
+Monte Carlo simulations (or 
+"[particle tracking](https://en.wikipedia.org/wiki/Single-particle_tracking)"). 
+Thus a consequence of 
+the paper is the mathematical certainty that the variable order FFPE 
+(VOFFPE) can be solved by simulations. 
+
+The variable order FFPE can also be solved directly, via clever numerical 
+algorithms. The CTRW interpretation of the VOFFPE can be leveraged for 
+such a clever numerical algorithm, as our friends over in applied maths 
+have done with their 
+[Discrete Time Random Walk algorithm](http://dx.doi.org/10.1016/j.jcp.2014.08.003). 
+This approach has several great benefits[^2], and now we know how to 
+extend these benefits to the variable order setting (to be continued). 
+
+[^2]: E.g. conservation of mass and non-negative solutions. 

@@ -1,0 +1,88 @@
+---
+title: Fractional Diffusion where "fractional" varies in space
+author: Peter Straka
+date: '2017-12-18'
+slug: VOFFPE
+categories: 
+  - statistical-physics
+tags: 
+  - statistical-physics
+  - anomalous-diffusion
+  - probability
+  - stochastic-processes 
+  - publication
+draft: no
+math: yes 
+summary: |
+    A Fractional Fokker-Planck Equation is derived which scales
+    variably in space. The paper is now 
+    [published](https://doi.org/10.1016/j.physa.2018.03.010). 
+image: https://strakaps.github.io/img/voffpe.png
+---
+
+
+
+<p>The new paper
+(<a href="http://arxiv.org/abs/1712.06767">arxiv.org/abs/1712.06767</a>)</p>
+<blockquote>
+<p><em>Variable Order Fractional Fokker-Planck
+Equations derived from Continuous Time Random Walks</em></p>
+</blockquote>
+<p>is currently under review.</p>
+<p>The variable order fractional
+Fokker-Planck equation (VOFFPE),
+in simple form<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, is
+<span class="math display">\[\frac{\partial}{\partial t} p(x,t) = \frac{\partial^2}{\partial x^2} 
+\underbrace{D_t^{1-\beta(x)}}_{\text{fractional derivative}}
+p(x,t).\]</span></p>
+<ul>
+<li>If you take out the fractional derivative operator, you get the
+<a href="https://en.wikipedia.org/wiki/Fokker%E2%80%93Planck_equation"><strong>Fokker-Planck equation</strong></a> <strong>(FPE)</strong>.
+It describes the spreading of probability via a random walk:</li>
+</ul>
+<p><img src="/img/spreading.gif" /></p>
+<ul>
+<li><p>Adding in the
+<a href="https://en.wikipedia.org/wiki/Fractional_calculus">fractional derivative</a>
+<span class="math display">\[D_t^{1-\beta} p(x,t) = \int_0^t p(x,t-s) \frac{s^{-\beta}}{\Gamma(1-\beta)}\,ds\]</span>
+results in the “<strong>fractional FPE</strong>”. The fractional derivative
+corresponds to longs rests of a walker, and slows down the spreading (making the
+dynamics “sub”diffusive).</p></li>
+<li><p>Here the order <span class="math inline">\(1-\beta\)</span> of the fractional derivative varies with the
+location <span class="math inline">\(x\)</span> of the walker, hence the name VOFFPE
+(<strong>variable order fractional FPE</strong>).
+In some regions, e.g. where the intracellular matrix of a cell is dense<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>,
+the trappingness can be stronger, which is modelled by a smaller <span class="math inline">\(\beta(x)\)</span>
+in that region.</p></li>
+</ul>
+<p>The paper shows that the equation has a unique solution <span class="math inline">\(p(x,t)\)</span>, and that
+this solution is the probability distribution of a Continuous Time
+Random Walk (CTRW)<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.
+CTRWs are random walks with random waiting times between
+jumps:</p>
+<p><img src="/img/CTRW.png" /></p>
+<p>The fractional derivative in time is tightly linked with
+<a href="/post/mittag-leffler/">Mittag-Leffler distributed</a> waiting times.</p>
+<p>Of course CTRWs can be simulated, and <span class="math inline">\(p(x,t)\)</span> may be computed via
+Monte Carlo simulations (or
+“<a href="https://en.wikipedia.org/wiki/Single-particle_tracking">particle tracking</a>”).
+Thus a consequence of
+the paper is the mathematical certainty that the variable order FFPE
+(VOFFPE) can be solved by simulations.</p>
+<p>The variable order FFPE can also be solved directly, via clever numerical
+algorithms. The CTRW interpretation of the VOFFPE can be leveraged for
+such a clever numerical algorithm, as our friends over in applied maths
+have done with their
+<a href="http://dx.doi.org/10.1016/j.jcp.2014.08.003">Discrete Time Random Walk algorithm</a>.
+This approach has several great benefits<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>, and now we know how to
+extend these benefits to the variable order setting (to be continued).</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Drift and diffusivity are left out here, but they may be any
+(Lipschitz-) continuous functions.<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Wong et. al, <a href="http://www.physics.emory.edu/faculty/weeks/lab/papers/Wong_04.pdf">PRL 2004</a><a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>Strictly speaking, a scaling limit of a CTRW.<a href="#fnref3" class="footnote-back">↩</a></p></li>
+<li id="fn4"><p>E.g. conservation of mass and non-negative solutions.<a href="#fnref4" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
