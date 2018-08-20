@@ -6,9 +6,9 @@ slug: nus-mit-datathon
 categories:
   - events
 tags:
-  - data-science
-  - healthcare
-  - machine-learning
+  - Data Science
+  - Healthcare
+  - Machine Learning
 header:
   caption: '🤔'
   image: 'datathon.jpg'
@@ -67,7 +67,7 @@ We joined forces with [Siqi Liu](https://www.mornin-feng.com/siqi),
 a PhD student at Saw Swee Hock School of Public Health and
 a member of the organising team for the Datathon who represented our team,
 and [Peng Shen](https://www.linkedin.com/in/peng-shen-137568154/)
-(MOH Holdings Pte Ltd). 
+(MOH Holdings Pte Ltd).
 
 ## All of Saturday: Extracting Data
 

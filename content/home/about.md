@@ -14,7 +14,7 @@ weight = 5
     "Statistics",
     "Machine Learning",
     "Statistical Physics",
-    "Public Health"
+    "Healthcare"
   ]
 
 # List your qualifications (such as academic degrees).

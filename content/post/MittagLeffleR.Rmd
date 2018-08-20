@@ -4,23 +4,23 @@ author: Peter Straka
 date: '2017-06-26'
 slug: mittag-leffler
 categories:
-  - software
+  - Software
 tags:
-  - software
+  - Software
   - R
-  - R-package
-  - heavy-tails
-  - bursts
+  - R package
+  - Heavy Tails
+  - Bursts
 draft: no
-math: yes 
+math: yes
 summary: |
-    First version of an R package which calculates probability densities 
-    of the Mittag-Leffler families of distributions. 
+    First version of an R package which calculates probability densities
+    of the Mittag-Leffler families of distributions.
 image: https://strakaps.github.io/MittagLeffleR/articles/MLdist_files/figure-html/unnamed-chunk-1-2.png
 ---
 
 Ricky Gill and I have created the R package MittagLeffleR,
-documented at 
+documented at
 [strakaps.github.io/MittagLeffleR/](../../MittagLeffleR/index.html).
 It is available on [CRAN] (and the latest development version on [GitHub]).
 MittagLeffleR calculates both Mittag-Leffler
@@ -60,10 +60,10 @@ The first type Mittag-Leffler distribution commonly occurs for the
 Suppose that for an event to happen, several "tries" are needed,
 and that each try has a duration.
 The number $N$ of tries until a success is geometrically distributed,
-and the *sum* of $N$ durations is well approximated by a Mittag-Leffler (type I) distribution (this is the [geometric stable](https://github.com/strakaps/MittagLeffleR) property). 
+and the *sum* of $N$ durations is well approximated by a Mittag-Leffler (type I) distribution (this is the [geometric stable](https://github.com/strakaps/MittagLeffleR) property).
 
-As an example, we simulate `n=100` Mittag-Leffler (type I) random 
-variables, 
+As an example, we simulate `n=100` Mittag-Leffler (type I) random
+variables,
 and estimate their tail and scale parameters via maximum likelihood:
 
 ```{r}
@@ -123,8 +123,8 @@ plot(x,p, type='l', main="Fractional diffusion with drift at t=1")
 
 ## Bugs and Issues
 
-Should you run into any bugs or issues, please 
-[let us know](https://github.com/strakaps/MittagLeffleR/issues). 
+Should you run into any bugs or issues, please
+[let us know](https://github.com/strakaps/MittagLeffleR/issues).
 Thanks!
 
 [matlab]: https://au.mathworks.com/matlabcentral/fileexchange/48154-the-mittag-leffler-function

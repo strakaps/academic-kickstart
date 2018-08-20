@@ -35,23 +35,23 @@ filter_default = 0
 
 [[filter]]
   name = "Anomalous Diffusion"
-  tag = ".anomalous-diffusion"
+  tag = "Anomalous Diffusion"
 
 [[filter]]
-  name = "Public Health"
-  tag = ".public-health"
+  name = "Healthcare"
+  tag = "Healthcare"
 
 [[filter]]
   name = "Statistics"
-  tag = ".statistics"
+  tag = "Statistics"
 
 [[filter]]
   name = "R"
-  tag = ".R"
+  tag = "R"
 
 [[filter]]
   name = "Python"
-  tag = "python"
+  tag = "Python"
 
 #
 # [[filter]]

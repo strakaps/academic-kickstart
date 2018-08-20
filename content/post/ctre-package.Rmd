@@ -4,27 +4,27 @@ author: Peter Straka
 date: '2018-05-11'
 slug: ctre-package
 categories:
-  - software
+  - Software
 tags:
-  - software
-  - bursts
+  - Software
+  - Bursts
   - extremes
-  - heavy-tails
+  - Heavy Tails
   - R
-  - R-package
+  - R package
 draft: yes
 math: yes
 summary: |
     The R package is now available on CRAN. It Models extremes of 'bursty'
-    time series via Continuous Time Random Exceedances (CTRE). 
+    time series via Continuous Time Random Exceedances (CTRE).
     (See [companion paper](https://strakaps.github.io/bursty-POT/).)
 image: https://strakaps.github.io/post/ctre-package_files/figure-html/data-plot-1.png
 ---
 
-The new [R package `CTRE`](https://strakaps.github.io/CTRE/) is now 
-available on CRAN. "CTRE" stands for "Continuous Time Random Exceedances", 
-which is a model for extreme values of bursty time series. 
-The theory is desribed in another paper 
+The new [R package `CTRE`](https://strakaps.github.io/CTRE/) is now
+available on CRAN. "CTRE" stands for "Continuous Time Random Exceedances",
+which is a model for extreme values of bursty time series.
+The theory is desribed in another paper
 ([html](https://strakaps.github.io/bursty-POT/)|[pdf](https://arxiv.org/pdf/1802.05218.pdf)).
 
 ```{r data-plot, message=FALSE}
@@ -33,48 +33,48 @@ flares_ctre <- ctre(flares)
 plot(flares_ctre, log = "y", main = "Solar Flares")
 ```
 
-The above time series are measurements of solar flare magnitudes by NASA[^*]. 
+The above time series are measurements of solar flare magnitudes by NASA[^*].
 Which observations are considered extreme is defined by a variable threshold $u$
-(dashed line, $< 5\%$ of observations). 
+(dashed line, $< 5\%$ of observations).
 The exceedances of this threshold (red) follow (asymptotically for high $u$)
-a 
+a
 [Generalized Pareto distribution](https://en.wikipedia.org/wiki/Generalized_Pareto_distribution).
 This type of modelling of extremes is standard in Extreme Value Theory,
-and known as the 
-[Peaks Over Threshold](https://en.wikipedia.org/wiki/Extreme_value_theory#Data_analysis) 
-(POT) method. 
+and known as the
+[Peaks Over Threshold](https://en.wikipedia.org/wiki/Extreme_value_theory#Data_analysis)
+(POT) method.
 To date,
-[_18 R packages_](https://cran.r-project.org/web/views/ExtremeValue.html) 
+[_18 R packages_](https://cran.r-project.org/web/views/ExtremeValue.html)
 have been developed for POT!
 
-[^*]: The ["complete Hard X Ray Burst Spectrometer event list"](https://ntrs.nasa.gov/search.jsp?R=19920006736) 
-is a comprehensive reference for all measurements of the Hard X 
-Ray Burst Spectrometer on NASA's Solar Maximum Mission from the time of 
-launch on Feb 14, 1980 to the end of the mission in Dec 1989. 12,776 
-events were detected, with the "vast 
-majority being solar flares". The list includes the start time, peak time, 
-duration, and peak rate of each event. We have used "start time" as the 
-variable for event times, and "peak rate" as the variable for event 
-magnitudes. 
+[^*]: The ["complete Hard X Ray Burst Spectrometer event list"](https://ntrs.nasa.gov/search.jsp?R=19920006736)
+is a comprehensive reference for all measurements of the Hard X
+Ray Burst Spectrometer on NASA's Solar Maximum Mission from the time of
+launch on Feb 14, 1980 to the end of the mission in Dec 1989. 12,776
+events were detected, with the "vast
+majority being solar flares". The list includes the start time, peak time,
+duration, and peak rate of each event. We have used "start time" as the
+variable for event times, and "peak rate" as the variable for event
+magnitudes.
 
 
 ## What's new about `CTRE`?
 
-`CTRE` provides a new way to model the **bursty timing** of the threshold 
-crossings. In complex systems, _inter-event times_ are typically 
-heavy-tailed[^2], and thus highly heterogeneous 
-(think income distributions). 
-The bulk of inter-event times is short, corresponding to bursts of events. 
-A few very long inter-event times represent quiet periods. 
+`CTRE` provides a new way to model the **bursty timing** of the threshold
+crossings. In complex systems, _inter-event times_ are typically
+heavy-tailed[^2], and thus highly heterogeneous
+(think income distributions).
+The bulk of inter-event times is short, corresponding to Bursts of events.
+A few very long inter-event times represent quiet periods.
 
-[^2]: See the Introduction of 
+[^2]: See the Introduction of
 ["Modelling bursty time series"](http://iopscience.iop.org/article/10.1088/1367-2630/15/10/103023) by Vajna, Tóth & Kertész, for a list of complex systems with heavy-tailed
-inter-event times. 
+inter-event times.
 
-The [Mittag-Leffler distribution](https://strakaps.github.io/MittagLeffleR/) 
-is universal for times between threshold crossings, see the 
-[companion paper](https://strakaps.github.io/bursty-POT/). 
-`CTRE` fits a Mittag-Leffler distribution to a range of threshold values: 
+The [Mittag-Leffler distribution](https://strakaps.github.io/MittagLeffleR/)
+is universal for times between threshold crossings, see the
+[companion paper](https://strakaps.github.io/bursty-POT/).
+`CTRE` fits a Mittag-Leffler distribution to a range of threshold values:
 
 ```{r stability-plot, message=FALSE, fig.height=4}
 flares_ctre <- thin(flares_ctre, k = 700)
@@ -83,34 +83,34 @@ MLestimates(flares_ctre, tail = 0.9, scale = 3E7)
 ```
 
 Above, the threshold is varied from the 5th to the 700th largest magnitude
-(as you move right along the x-axes) 
-and the parameters estimates are plotted on the y-axis. 
+(as you move right along the x-axes)
+and the parameters estimates are plotted on the y-axis.
 For both panels, towards the left (exceedances=5), only few data are available,
-and the estimate has a high variance. 
-Towards the right (exceedances = 700), the threshold is low, and the 
-Mittag-Leffler fit degrades (high bias). 
-In between is where we want to read off our (hopefully stable) parameter 
-estimates. The above plots are hence called "stability plots". 
+and the estimate has a high variance.
+Towards the right (exceedances = 700), the threshold is low, and the
+Mittag-Leffler fit degrades (high bias).
+In between is where we want to read off our (hopefully stable) parameter
+estimates. The above plots are hence called "stability plots".
 
-Important: 
+Important:
 
 : The scale parameter is proportional to $k^{-1/\beta}$.
-The parameter $\beta$ is hence used to rescale the y-values of the 
-right-hand plot, in order to make the estimates constant, and needs to 
-estimated from the left-hand plot first. 
+The parameter $\beta$ is hence used to rescale the y-values of the
+right-hand plot, in order to make the estimates constant, and needs to
+estimated from the left-hand plot first.
 
 ## `CTRE` applied to data
 
-For the solar flare data, we read off 
+For the solar flare data, we read off
 $$
 \beta \approx 0.9, \quad \sigma \approx 3 \times 10^7.
 $$
-This means that the inter-arrival time $T(k)$ for magnitudes as high as the 
-$k$-th magnitude is distributed as 
+This means that the inter-arrival time $T(k)$ for magnitudes as high as the
+$k$-th magnitude is distributed as
 $$
 T(k) \sim {\rm ML}\left(0.9, \frac{3 \times 10^7 {\rm sec}}{k^{1/0.9}} \right).
 $$
-For example, let's assume the magnitude (peak rate) $10,000$. How many 
+For example, let's assume the magnitude (peak rate) $10,000$. How many
 magnitudes exceed it?
 
 ```{r}
@@ -118,69 +118,69 @@ library(magrittr)
 (flares_ctre %>% magnitudes() %>% sort(decreasing=TRUE) > 10000) %>% sum()
 ```
 
-So substitute $k = 24$. The model thus predicts inter-arrival times drawn from the 
+So substitute $k = 24$. The model thus predicts inter-arrival times drawn from the
 distribution
 $$
 {\rm ML}\left(0.9, `r signif(3E7 / 24^(1/0.9), 2)` {\rm sec} \right)
 = {\rm ML}\left(0.9, `r signif(3E7 / 24^(1/0.9)/60/60/24, 2)` {\rm days} \right).
 $$
 
-Here's the plot of this distribution, on a logarithmic scale: 
+Here's the plot of this distribution, on a logarithmic scale:
 
 ```{r, fig.height=3, fig.width=5, echo=FALSE}
 library(ggplot2)
 x <- seq(from = 0.02, to = 100, by=0.05)
-data.frame(x = x, 
+data.frame(x = x,
            MittagLeffler = MittagLeffleR::dml(x, 0.9, 10),
-           Exponential = dexp(x, 1/10)) %>% 
+           Exponential = dexp(x, 1/10)) %>%
   reshape2::melt("x", c("MittagLeffler", "Exponential")) %>%
-  ggplot(aes(x, value, colour = variable)) + 
+  ggplot(aes(x, value, colour = variable)) +
   scale_x_continuous(trans="log10") +
   scale_y_continuous(trans="log10") +
-  ylab("density") + 
-  geom_line(aes(linetype = variable)) + 
+  ylab("density") +
+  geom_line(aes(linetype = variable)) +
   theme(legend.title = element_blank())
 ```
 
 
 
 Compared to the Exponential distribution, the Mittag-Leffler distribution
-puts more probability mass on both tiny values (bursts) and 
-values in the tails (quiet periods). 
+puts more probability mass on both tiny values (Bursts) and
+values in the tails (quiet periods).
 
 
-## Shiny app 
+## Shiny app
 
-Running 
+Running
 
 ```{r, eval=FALSE}
 CTRE::runCTREshiny()
 ```
 
-opens a Shiny app that that lets you do the above manipulations via sliders. 
-It is / should be loading below: 
+opens a Shiny app that that lets you do the above manipulations via sliders.
+It is / should be loading below:
 
 <iframe src="https://strakaps.shinyapps.io/ctre-app/" style="border: none; width: 800px; height: 900px"></iframe>
 
 
 ## What about "clustering of extremes"?
 
-The main other appraoch in Extreme Value Theory which addresses irregular 
-(non-Poissonian) threshold crossing times goes under the name 
-"clustering of extremes".[^3]  It assumes that the underlying 
-process is stationary, and conflates each excursion of the process 
-above the threshold as one cluster of events. 
+The main other appraoch in Extreme Value Theory which addresses irregular
+(non-Poissonian) threshold crossing times goes under the name
+"clustering of extremes".[^3]  It assumes that the underlying
+process is stationary, and conflates each excursion of the process
+above the threshold as one cluster of events.
 
-CTREs and clustering of extremes both generalize the standard 
-assumption of independent events, but in 
-different directions.  They are hence complementary, and it needs to be 
-investigated how they should be compared meaningfully. 
+CTREs and clustering of extremes both generalize the standard
+assumption of independent events, but in
+different directions.  They are hence complementary, and it needs to be
+investigated how they should be compared meaningfully.
 
-[^3]: See e.g. Chapter 3 in the textbook 
+[^3]: See e.g. Chapter 3 in the textbook
 [_Extremes and Related Properties of Random Sequences and Processes_](https://books.google.com.ph/books/about/Extremes_and_Related_Properties_of_Rando.html?id=-ofTBwAAQBAJ&redir_esc=y)
 by Leadbetter, Lindgren & Rootzén.
 
 
 ## Feedback
 
-Do you think CTREs are a useful model? Please comment below. 
+Do you think CTREs are a useful model? Please comment below.

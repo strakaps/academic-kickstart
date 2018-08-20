@@ -6,7 +6,7 @@ date = 2017-06-12
 draft = false
 
 categories = ["recruitment"]
-tags = ["announcement", "scholarship", "PhD"]
+tags = ["Announcement", "Scholarship", "PhD"]
 summary = "Apply for a prestigious PhD scholarship."
 
 +++
@@ -20,7 +20,7 @@ annum tax-free stipend and a travel and development support package of up to `$`
 In addition to this scholarship package, scholars are provided with access to a range of development opportunities across research, teaching and learning and leadership and engagement.
 
 Applicants should submit their expression of interest at  
-[http://www.2025.unsw.edu.au/apply/scientia-phd-scholarships/using-big-data-redesign-health-system](http://www.2025.unsw.edu.au/apply/scientia-phd-scholarships/using-big-data-redesign-health-system)  
+[http://www.2025.unsw.edu.au/apply/scientia-phd-scholarships/using-Big Data-redesign-health-system](http://www.2025.unsw.edu.au/apply/scientia-phd-scholarships/using-Big Data-redesign-health-system)  
 by 21st July 2017 but are encouraged to do so as early as possible.
 
 More information on the UNSW Scientia PhD Scholarship Scheme:

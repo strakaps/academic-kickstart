@@ -4,12 +4,12 @@ author: Peter Straka
 date: '2018-07-16'
 slug: 2018-07-mja-paper
 categories:
-  - public-health
+  - Public Health
 tags:
-  - healthcare
-  - data-science
-  - publication
-  - machine-learning
+  - Healthcare
+  - Data Science
+  - Publication
+  - Machine Learning
 header:
   caption: "Hierarchical blockmodel fitted and visualised using graph-tool. Doctors (top) are connected to patients (bottom) via a GP consultation recorded in MBS data."
   image: '/headers/big-bipartite-wide.png'
@@ -17,11 +17,11 @@ header:
 
 _See also the
 [MJA podcast episode](https://www.mja.com.au/podcast/209/2/mja-podcasts-2018-episode-57-big-gp-data-research-prof-louisa-jorm-and-dr-michael)
-accompanying this article._ 
+accompanying this article._
 
 Our joint work
 ([UNSW CBDRH](https://cbdrh.med.unsw.edu.au/) and
-[Statistics](https://www.maths.unsw.edu.au/about/statistics))
+[Statistics](https://www.maths.unsw.edu.au/about/Statistics))
 which analyses Australian patient claim data using big network algorithms
 is now available on the
 [MJA website](https://www.mja.com.au/journal/2018/209/2/overcoming-data-drought-exploring-general-practice-australia-network-analysis).
@@ -42,7 +42,7 @@ on the following research questions:
     where $n_k$ are the numbers of visits made to different PPCs.
 
 Datasets such as provided by
-[BEACH](http://sydney.edu.au/medicine/public-health/research/beach.php)
+[BEACH](http://sydney.edu.au/medicine/Public Health/research/beach.php)
 (Bettering the Evaluation And Care of Health, USYD)
 would be ideal to tackle these questions, but were
 [discontinued](http://sydney.edu.au/medicine/fmrc/media/FMRC-closure-2016-06.php)

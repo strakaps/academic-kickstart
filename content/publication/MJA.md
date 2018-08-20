@@ -65,7 +65,7 @@ url_custom = [
 # Projects (optional).
 #   Associate this publication with one or more of your projects.
 #   Simply enter the filename (excluding '.md') of your project file in `content/project/`.
-projects = ["anomalous-diffusion"]
+projects = ["GP-networks"]
 
 
 # Does the content use math formatting?

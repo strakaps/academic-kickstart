@@ -11,10 +11,10 @@ summary = "Heavy tails, scaling limits, R packages"
 # Optional image to display on homepage (relative to `static/img/` folder).
 image_preview = "CTREs.png"
 
-categories = ["statistical-physics"]
+categories = ["Statistical Physics"]
 # Tags: can be used for filtering projects.
 # Example: `tags = ["machine-learning", "deep-learning"]`
-tags = ["bursts", "statistics", "statistical-physics"]
+tags = ["Bursts", "Statistics", "Statistical Physics"]
 
 # Optional external URL for project (replaces project detail page).
 external_link = ""
@@ -35,7 +35,7 @@ number of defective nodes in a network etc. are crucial for the control of risk 
 systems.
 "Mainstream" extreme value theory assumes that events happen uniformly, e.g. yearly, daily, or every second,
 or that events occur at a certain rate (Poisson process). In fact, however, a great number of systems violates this
-assumption: Events occur in bursts, intermittent with quiescent periods drawn from a heavy-tailed distribution.
+assumption: Events occur in Bursts, intermittent with quiescent periods drawn from a heavy-tailed distribution.
 This phenomenon is ubiquitous for human-created events, and is deemed to occur for any type of action
 resulting from a dynamic list of priorities.
 

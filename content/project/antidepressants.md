@@ -11,10 +11,10 @@ summary = "Only 1/2 -- 2/3 of antidepressant users have depression. How do we us
 # Optional image to display on homepage (relative to `static/img/` folder).
 image_preview = "coefs_cutoff.png"
 
-categories = ["public-health"]
+categories = ["Healthcare"]
 # Tags: can be used for filtering projects.
 # Example: `tags = ["machine-learning", "deep-learning"]`
-tags = ["statistics", "public-health", "R"]
+tags = ["Statistics", "Healthcare", "R"]
 
 # Optional external URL for project (replaces project detail page).
 external_link = ""
@@ -29,15 +29,15 @@ caption = "Effect sizes for drug interactions"
 
 +++
 
-Records of antidepressant dispensings are often used in public health research 
-as a surrogate measure of depression.  In 1/3 to 1/2 of cases however, 
-antidepressants are prescribed for indications other than depression, 
-which results in misclassification. 
+Records of antidepressant dispensings are often used in public health research
+as a surrogate measure of depression.  In 1/3 to 1/2 of cases however,
+antidepressants are prescribed for indications other than depression,
+which results in misclassification.
 
 Medicare Benefits Schedule (MBS) data contain the dispensings of antidepressants
 and other pharmaceuticals, and data from the 45 and Up Study provide a gold
-standard response variable 
+standard response variable
 (a yes/no answer to "Have you been treated for depression?").
 
-How can these data be used to design a predictive algorithm identifying 
-antidepressant users _with_ depression? 
+How can these data be used to design a predictive algorithm identifying
+antidepressant users _with_ depression?

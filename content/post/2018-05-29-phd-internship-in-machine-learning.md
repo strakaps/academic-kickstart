@@ -6,10 +6,10 @@ slug: phd-internship-in-machine-learning
 categories:
   - recruitment
 tags:
-  - machine-learning
-  - credit-risk
-  - banking
-  - internship
+  - Machine Learning
+  - Credit Risk
+  - Banking
+  - Internship
 header:
   caption: ''
   image: 'https://aprintern.amsi.org.au/wp-content/uploads/sites/40/2017/11/aprintern.png'
