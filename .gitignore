@@ -1,2 +1,6 @@
 public/
 .idea/
+content/.DS_Store
+themes/.DS_Store
+content/post/.DS_Store
+.DS_Store
