@@ -9,7 +9,7 @@ title = "Continuous Time Random Walks"
 summary = "Limit theorems and statistical physics"
 
 # Optional image to display on homepage (relative to `static/img/` folder).
-image_preview = "Anomalous Diffusion.png"
+image_preview = "anomalous-diffusion.png"
 
 categories = ["Anomalous Diffusion"]
 # Tags: can be used for filtering projects.
