@@ -6,3 +6,5 @@ content/post/.DS_Store
 .DS_Store
 .Rproj.user
 .Rhistory
+blogdown/
+*_cache/

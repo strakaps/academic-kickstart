@@ -1,0 +1,197 @@
+---
+title: Add Interactions to Regularized Regression
+author: Peter Straka
+date: '2018-10-13'
+slug: glinternet
+categories:
+  - statistical learning
+tags:
+  - R
+  - Machine Learning
+header:
+  caption: 'An interaction network with many variables'
+  image: '/headers/interactions.png'
+---
+
+
+
+<div id="lasso-glinternet" class="section level3">
+<h3>Lasso &amp; glinternet</h3>
+<p>Every Data Scientist and her dog know linear and logistic regression. The majority will probably also know that these models have regularized versions, which increase predictive performance by reducing variance (at the cost of a small increase in bias). Choosing L1-regularization (Lasso) even gets you variable selection for free. The theory behind these models is covered expertly in <a href="https://web.stanford.edu/~hastie/ElemStatLearn/"><em>The Elements of Statistical Learning</em></a> (for an easier version, see <a href="https://www-bcf.usc.edu/~gareth/ISL/"><em>An Introduction to Statistical Learning</em></a>), and implemented nicely in the packages <code>glmnet</code> for R and <a href="http://scikit-learn.org/stable/modules/linear_model.html#lasso"><code>scikitlearn</code></a> for Python.</p>
+<p>Few people, however, have heard about <code>glinternet</code>, which is a powerful extension of the Lasso model:</p>
+<blockquote>
+<p><code>glinternet</code> adds pairwise variable interactions into the Lasso model, and selects these automatically.</p>
+</blockquote>
+<p>It’s a <strong>linear model</strong>, and thus easily interpretable. Its computational complexity is the same as penalized regression: <span class="math inline">\(\mathcal O(Nm)\)</span> where there are <span class="math inline">\(N\)</span> rows and <span class="math inline">\(m\)</span> variables<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. Thus it handles problems of the same size as (deep) neural networks, potentially with tens of thousands of variables. It should be stressed here that for a thousand variables there are almost 500,000 pairwise interactions that glinternet checks! For structured data, logistic regression is a very useful benchmark model, which can be <a href="https://twitter.com/ShalitUri/status/1009534668880928769">on par with sophisticated deep learning models</a> even for huge datasets. The glinternet model is more flexible than logistic regression, and is just as interpretable.</p>
+</div>
+<div id="a-glinternet-tutorial" class="section level1">
+<h1>A glinternet tutorial</h1>
+<p>Let’s look at the <code>car90</code> dataset in the <code>rpart</code> package. It has 25 categorical and 8 continuous predictors, and a continuous outcome (Price). We fit a glinternet model to it, which is a linear model containing all possible pairwise interactions.</p>
+<div id="interactions" class="section level3">
+<h3>Interactions</h3>
+<p>A linear model <em>without</em> interactions is usually written as</p>
+<p><span class="math display">\[y = \beta_0 + \sum_k \beta_k X_k + \varepsilon\]</span></p>
+<p>where <span class="math inline">\(\beta_0\)</span> is the intercept, <span class="math inline">\(X_k\)</span> are predictor variables, <span class="math inline">\(\beta_k\)</span> the coefficients and <span class="math inline">\(\varepsilon\)</span> a model error. We will use categorical variables, so we need to group the variables and coefficients with their categories:</p>
+<p><span class="math display">\[y = \beta_0 + \sum_{i=1}^m \sum_{l=1}^{L_i} \beta_{i,l} X_{i,l} + \varepsilon\]</span> where</p>
+<ul>
+<li><span class="math inline">\(m\)</span> is the number of predictors <span class="math inline">\(X_1, \ldots, X_m\)</span></li>
+<li><span class="math inline">\(L_i\)</span> is the number of levels of <span class="math inline">\(X_i\)</span> if <span class="math inline">\(X_i\)</span> is categorical, and <code>1</code> otherwise</li>
+<li><span class="math inline">\((X_{i,1}, \ldots, X_{i,L_i})\)</span> are 0-1 dummy variables representing the categories of <span class="math inline">\(X_i\)</span> (one-hot encoded)</li>
+</ul>
+<p>A pairwise interaction model contains all possible pairwise products of the predictors:</p>
+<p><span class="math display">\[y = \beta_0 + \sum_{l=1}^{L_i} \sum_{i=1}^m \beta_{i,l}, X_{i,l} 
++ \sum_{1 \le i&lt;j \le m} \sum_{l=1}^{L_i} \sum_{k=1}^{L_j} \theta_{i,j,l,k} X_{i,l} X_{j,k}\]</span></p>
+<p>Interactions, e.g. between variables <span class="math inline">\(X_i\)</span> and <span class="math inline">\(X_j\)</span>, occur when the effect of <span class="math inline">\(X_j\)</span> on <span class="math inline">\(y\)</span> will vary depending on the level (or value) of <span class="math inline">\(X_i\)</span>. In that case, some of the values <span class="math inline">\(\theta_{i,j, \cdot, \cdot}\)</span> will be non-zero.</p>
+<div id="selection-of-variables-and-interactions" class="section level4">
+<h4>Selection of variables and interactions</h4>
+<p>The L1 regularization is known as the lasso and produces sparsity. glinternet uses a <em>group</em> lasso for the variables and variable interactions, which introduces the following <em>strong hierarchy</em>: An interaction between <span class="math inline">\(X_i\)</span> and <span class="math inline">\(X_j\)</span> can only be picked by the model if both <span class="math inline">\(X_i\)</span> and <span class="math inline">\(X_j\)</span> are also picked. In other words, interactions between two predictors are not considered unless both predictors have non-zero coefficients in the model. The details are in the original <a href="https://doi.org/10.1080/10618600.2014.938812">paper</a>.</p>
+</div>
+</div>
+<div id="fitting-glinternet" class="section level3">
+<h3>Fitting glinternet</h3>
+<p>Unfortunately, <code>glinternet</code>’s “API” is not super user friendly… the first challenge is to bring the data into a form that glinternet accepts: The categorical variables need to be (somewhat un-R-like) coded as integers starting from 0. We also need to construct a <code>numLevels</code> vector containing the number of levels <span class="math inline">\(L_1, \ldots, L_m\)</span> in each column if the column is categorical, and <code>1</code> else:</p>
+<pre class="r"><code>library(dplyr)
+
+# Model2 contains model names, which aren&#39;t useful here
+df &lt;- rpart::car90 %&gt;% select(-Model2)
+
+# drop rows with empty outcomes
+df &lt;- df[!is.na(df$Price), ]
+y &lt;- df$Price
+df &lt;- df %&gt;% select(-Price)
+
+# impute the median for the continuous variables
+i_num &lt;- sapply(df, is.numeric)
+df[, i_num] &lt;- apply(df[, i_num], 2, function(x) ifelse(is.na(x), median(x, na.rm=T), x))
+
+# impute empty categories
+df[, !i_num] &lt;- apply(df[, !i_num], 2, function(x) {
+  x[x==&quot;&quot;] &lt;- &quot;empty&quot;
+  x[is.na(x)] &lt;- &quot;missing&quot;
+  x
+})
+
+# get the numLevels vector containing the number of categories
+X &lt;- df
+X[, !i_num] &lt;- apply(X[, !i_num], 2, factor) %&gt;% as.data.frame()
+numLevels &lt;- X %&gt;% sapply(nlevels)
+numLevels[numLevels==0] &lt;- 1
+
+# make the categorical variables take integer values starting from 0
+X[, !i_num] &lt;- apply(X[, !i_num], 2, function(col) as.integer(as.factor(col)) - 1)</code></pre>
+<p>A single glinternet model is fitted with the function <code>glinternet</code>; here, we directly fit a 10-fold Cross-Validated model:</p>
+<pre class="r"><code>library(glinternet)
+set.seed(1001)
+cv_fit &lt;- glinternet.cv(X, y, numLevels)
+plot(cv_fit)</code></pre>
+<p><img src="/post/2018-10-13-glinternet_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>We see the MSE plotted against the decreasing values of regularization parameter <code>lambda</code>.</p>
+<pre class="r"><code>i_1Std &lt;- which(cv_fit$lambdaHat1Std == cv_fit$lambda)</code></pre>
+<p>It is common <em>not</em> to pick the lambda corresponding to the lowest estimate of cross-validation error, but to err on the side of more regularization. So we are happy with a larger lambda with CV error estimate below the minimum plus one standard deviation. This lambda has index <code>i_1Std</code> = 22. Its coefficients <span class="math inline">\(\beta_{i,l}\)</span> and <span class="math inline">\(\theta_{i,j,l,k}\)</span> can be extracted by running</p>
+<pre class="r"><code>coefs &lt;- coef(cv_fit$glinternetFit)[[i_1Std]]</code></pre>
+<p><code>coefs</code> is a list of 4 items: <code>mainEffects</code>, <code>mainEffectsCoef</code>, <code>interactions</code> and <code>interactionsCoef</code>.</p>
+<p>Let’s look at the part without interactions first: The main effects identified are</p>
+<pre class="r"><code>coefs$mainEffects</code></pre>
+<pre><code>## $cat
+## [1] 3
+## 
+## $cont
+## [1]  5  7  9 12 20 22 11</code></pre>
+<p>which are the indices of the categorical variables and the continuous variables, in order as they occur in the data. We get the indices via</p>
+<pre class="r"><code>idx_num &lt;- (1:length(i_num))[i_num]
+idx_cat &lt;- (1:length(i_num))[!i_num]
+names(numLevels)[idx_cat[coefs$mainEffects$cat]]</code></pre>
+<pre><code>## [1] &quot;Rim&quot;</code></pre>
+<pre class="r"><code>names(numLevels)[idx_num[coefs$mainEffects$cont]]</code></pre>
+<pre><code>## [1] &quot;Frt.Leg.Room&quot; &quot;Gear.Ratio&quot;   &quot;HP&quot;           &quot;Length&quot;      
+## [5] &quot;Tank&quot;         &quot;Weight&quot;       &quot;Height&quot;</code></pre>
+<p>The coefficients for these variables are:</p>
+<pre class="r"><code>coefs$mainEffectsCoef</code></pre>
+<pre><code>## $cat
+## $cat[[1]]
+## [1]    357.6320  -8221.4669   6589.1535 -36595.3391    118.0856   -920.4584
+## 
+## 
+## $cont
+## $cont[[1]]
+## [1] 35.48628
+## 
+## $cont[[2]]
+## [1] 314.3327
+## 
+## $cont[[3]]
+## [1] -477.2347
+## 
+## $cont[[4]]
+## [1] 9.059015
+## 
+## $cont[[5]]
+## [1] 507.8227
+## 
+## $cont[[6]]
+## [1] 1.366189
+## 
+## $cont[[7]]
+## [1] 104.6502</code></pre>
+<p>(I would have expected all of these to be positive; one should check why <code>HP</code> has a negative coefficient.)</p>
+<p>Now for the interaction pairs:</p>
+<pre class="r"><code>coefs$interactions</code></pre>
+<pre><code>## $catcat
+## NULL
+## 
+## $contcont
+##      [,1] [,2]
+## [1,]    5    9
+## [2,]   11   20
+## 
+## $catcont
+##      [,1] [,2]
+## [1,]    3    5</code></pre>
+<p>The above means:</p>
+<ul>
+<li>There is no interaction between the categorical variables (unsurprising because we only identified one. If there was an interaction pair, we would access it via <code>coefs$interactionsCoef$catcat</code>, giving a list of matrices, one matrix of dimension <span class="math inline">\(L_i \times L_j\)</span> for each pair.)</li>
+<li>Two pairs of continuous variables have interactions: (5,9) and (11,20), which are (Frt.Leg.Room, HP) and (Height, Tank). The coefficients for these interactions are</li>
+</ul>
+<pre class="r"><code>coefs$interactionsCoef$contcont</code></pre>
+<pre><code>## [[1]]
+## [1] 13.66277
+## 
+## [[2]]
+## [1] -6.634724</code></pre>
+<ul>
+<li>There is one interaction between categorical variable 3 and continuous variable 5, which are Rim and Frt.Leg.Room. The coefficients for this interaction are:</li>
+</ul>
+<pre class="r"><code>coefs$interactionsCoef$catcont</code></pre>
+<pre><code>## [[1]]
+## [1] -164.0751   37.7502 -324.6745  741.9752 -158.0835 -132.8923</code></pre>
+<p>Our simple interaction network looks like this:</p>
+<p><img src="/post/2018-10-13-glinternet_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>The model has a root mean squared error (RMSE) on validation data of</p>
+<pre class="r"><code>sqrt(cv_fit$cvErr[[i_1Std]])</code></pre>
+<pre><code>## [1] 3411.904</code></pre>
+</div>
+<div id="compare-to-linear-regression" class="section level3">
+<h3>Compare to linear regression</h3>
+<p>To quantify how much interactions have contributed to predictive power, we now fit a glmnet model. The best CV mean-squared error for the glmnet model is higher than the mean-squared error for glinternet:</p>
+<pre class="r"><code>df$Price &lt;- y
+X &lt;- model.matrix(Price ~ . - 1, df)
+library(glmnet)
+cv_glmnet &lt;- cv.glmnet(X,y)
+sqrt(min(cv_glmnet$cvm))</code></pre>
+<pre><code>## [1] 4238.202</code></pre>
+</div>
+<div id="take-home-message" class="section level2">
+<h2>Take-home message</h2>
+<p>When you’re using logistic or linear regression with Lasso regularization as a baseline, and your next step is to see if adding interactions improve predictive power: try glinternet!</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://doi.org/10.1080/10618600.2014.938812">Learning Interactions via Hierarchical Group-Lasso Regularization</a>. Michael Lim &amp; Trevor Hastie</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Though for this to be true, I believe you have to limit the “interaction search space” via the <code>screenLimit</code> parameter.<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>

@@ -1,5 +1,5 @@
 ---
-title: Why not add Interactions to Regularized Regression?
+title: Add Interactions to Regularized Regression
 author: Peter Straka
 date: '2018-10-13'
 slug: glinternet
@@ -9,19 +9,20 @@ tags:
   - R
   - Machine Learning
 header:
-  caption: ''
-  image: ''
+  caption: 'An interaction network with many variables'
+  image: '/headers/interactions.png'
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(cache = TRUE, message=FALSE)
 ```
 
 ### Lasso & glinternet
 
-Every Data Scientist knows linear and logistic regression; 
-and most will probably know that these models have regularized versions, which increase predictive performance by reducing variance (at the cost of a small increase in bias). 
-Choosing L1-regularization (Lasso), you even get variable selection for free.
+Every Data Scientist and her dog know linear and logistic regression.
+The majority will probably also know that these models have regularized versions, 
+which increase predictive performance by reducing variance (at the cost of a small increase in bias). 
+Choosing L1-regularization (Lasso) even gets you variable selection for free.
 The theory behind these models is covered expertly in 
 [_The Elements of Statistical Learning_](https://web.stanford.edu/~hastie/ElemStatLearn/)
 (for an easier version, see 
@@ -31,13 +32,24 @@ and implemented nicely in the packages
 [`scikitlearn`](http://scikit-learn.org/stable/modules/linear_model.html#lasso) 
 for Python. 
 
-Few people, however, have heard about `glinternet`, which is a powerful extension of the above: 
+Few people, however, have heard about `glinternet`, which is a powerful extension of the Lasso model: 
 
 > `glinternet` adds pairwise variable interactions into the Lasso model, 
 > and selects these automatically.
 
-It's a **linear model**, and thus highly interpretable, and its computational complexity is the same as penalized regression, $\mathcal O(Nm)$ where there are $N$ rows and $m$ variables[^1]. Thus it handles problems of the same size as (deep) neural networks, potentially with tens of thousands of variables. 
-It should be stressed here that for a thousand variables there are almost 500,000 pairwise interactions that glinternet checks!
+It's a **linear model**, and thus easily interpretable. 
+Its computational complexity is the same as penalized regression: 
+$\mathcal O(Nm)$ where there are $N$ rows and $m$ variables[^1]. 
+Thus it handles problems of the same size as (deep) neural networks, 
+potentially with tens of thousands of variables. 
+It should be stressed here that for a thousand variables 
+there are almost 500,000 pairwise interactions that glinternet checks!
+For structured data, logistic regression is a very useful benchmark model, 
+which can be 
+[on par with sophisticated deep learning models](https://twitter.com/ShalitUri/status/1009534668880928769)
+even for huge datasets.
+The glinternet model is more flexible than logistic regression,
+and is just as interpretable.
 
 
 [^1]: Though for this to be true, I believe you have to limit the "interaction search space" via the `screenLimit` parameter.
@@ -47,150 +59,221 @@ It should be stressed here that for a thousand variables there are almost 500,00
 
 # A glinternet tutorial
 
-Let's look at the simple `solder` dataset in the `rpart` package. 
-The `skips` variable (continuous) is to be predicted based on 5 categorical variables with 3, 2, 4, 10 and 3 levels: 
+Let's look at the `car90` dataset in the `rpart` package.
+It has 25 categorical and 8 continuous predictors, and a continuous outcome (Price). 
+We fit a glinternet model to it, which is a linear model containing all possible 
+pairwise interactions.
+
+### Interactions
+
+A linear model _without_ interactions is usually written as
+
+$$y = \beta_0 + \sum_k \beta_k X_k + \varepsilon$$ 
+
+where $\beta_0$ is the intercept,
+$X_k$ are predictor variables, 
+$\beta_k$ the coefficients and $\varepsilon$ a model error.
+We will use categorical variables, so we need to group the variables and coefficients 
+with their categories:
+
+$$y = \beta_0 + \sum_{i=1}^m \sum_{l=1}^{L_i} \beta_{i,l} X_{i,l} + \varepsilon$$
+where 
+
+* $m$ is the number of predictors $X_1, \ldots, X_m$
+* $L_i$ is the number of levels of $X_i$ if $X_i$ is categorical, and `1` otherwise
+* $(X_{i,1}, \ldots, X_{i,L_i})$ are 0-1 dummy variables representing the categories of $X_i$ (one-hot encoded)
+
+A pairwise interaction model contains all possible pairwise products of
+the predictors:
+
+$$y = \beta_0 + \sum_{l=1}^{L_i} \sum_{i=1}^m \beta_{i,l}, X_{i,l} 
++ \sum_{1 \le i<j \le m} \sum_{l=1}^{L_i} \sum_{k=1}^{L_j} \theta_{i,j,l,k} X_{i,l} X_{j,k}$$
+
+Interactions, e.g. between variables $X_i$ and $X_j$, 
+occur when the effect of $X_j$ on $y$ will vary depending on the level
+(or value) of $X_i$. In that case, some of the values 
+$\theta_{i,j, \cdot, \cdot}$ will be non-zero.
+
+
+#### Selection of variables and interactions
+
+The L1 regularization is known as the lasso and produces sparsity. 
+glinternet uses a _group_ lasso for the variables and variable interactions, 
+which introduces the following _strong hierarchy_: 
+An interaction between $X_i$ and $X_j$ can only be picked by the model if
+both $X_i$ and $X_j$ are also picked. 
+In other words, interactions between two predictors are not considered unless
+both predictors have non-zero coefficients in the model.
+The details are in the original [paper](https://doi.org/10.1080/10618600.2014.938812). 
+
+### Fitting glinternet
+
+Unfortunately, `glinternet`'s "API" is not super user friendly...
+the first challenge is to bring the data into a form that glinternet accepts: 
+The categorical variables need to be (somewhat un-R-like) coded as integers starting from 0. 
+We also need to construct a `numLevels` vector containing the number of levels 
+$L_1, \ldots, L_m$
+in each column if the column is categorical, and `1` else:
+
 
 ```{r}
-library(rpart)
-solder$Panel <- as.factor(solder$Panel)
-summary(solder)
+library(dplyr)
+
+# Model2 contains model names, which aren't useful here
+df <- rpart::car90 %>% select(-Model2)
+
+# drop rows with empty outcomes
+df <- df[!is.na(df$Price), ]
+y <- df$Price
+df <- df %>% select(-Price)
+
+# impute the median for the continuous variables
+i_num <- sapply(df, is.numeric)
+df[, i_num] <- apply(df[, i_num], 2, function(x) ifelse(is.na(x), median(x, na.rm=T), x))
+
+# impute empty categories
+df[, !i_num] <- apply(df[, !i_num], 2, function(x) {
+  x[x==""] <- "empty"
+  x[is.na(x)] <- "missing"
+  x
+})
+
+# get the numLevels vector containing the number of categories
+X <- df
+X[, !i_num] <- apply(X[, !i_num], 2, factor) %>% as.data.frame()
+numLevels <- X %>% sapply(nlevels)
+numLevels[numLevels==0] <- 1
+
+# make the categorical variables take integer values starting from 0
+X[, !i_num] <- apply(X[, !i_num], 2, function(col) as.integer(as.factor(col)) - 1)
+
 ```
 
-We create the response vector `Y` and the input matrix `X` from the input data frame. 
-Numeric columns in `X` are left unchanged; categorical columns must be (somewhat un-R-like) coded as $0, \ldots, K-1$ where $K$ is the number of categories of the column.
-We also need a `numLevels` vector containing the number of levels in each column:
 
-```{r, message=FALSE}
-library(plyr)
-library(magrittr)
-Y <- solder$skips
-X <- solder[which(names(solder)!="skips")]
-numLevels <- laply(X, nlevels)
-X <- X %>% laply(function(col) as.integer(col) - 1) %>% t()
-```
-(If there was a continuous predictor, we'd have to code it with the entry `1` in `numLevels`.)
-
-A glinternet model is fitted with the function `glinternet`; here, we directly fit a 10-fold Cross-Validated model:
+A single glinternet model is fitted with the function `glinternet`; here, we directly fit a 10-fold Cross-Validated model:
 
 ```{r, message=FALSE}
 library(glinternet)
-cv_fit <- glinternet.cv(X, Y, numLevels)
+set.seed(1001)
+cv_fit <- glinternet.cv(X, y, numLevels)
 plot(cv_fit)
 ```
 
+We see the MSE plotted against the decreasing values of regularization parameter `lambda`.
+
 
 ```{r}
-i1Std <- which(cv_fit$lambdaHat1Std == cv_fit$lambda)
+i_1Std <- which(cv_fit$lambdaHat1Std == cv_fit$lambda)
 ```
-The regularization parameter `lambda` within 1 standard deviation of the best value has index `i1Std` = `r i1Std`; its interactions can be extracted by running
+
+It is common _not_ to pick the lambda corresponding to the lowest estimate of cross-validation error, but to err on the side of more regularization. 
+So we are happy with a larger lambda with CV error estimate below the minimum 
+plus one standard deviation. This lambda has index
+`i_1Std` = `r i_1Std`. Its coefficients $\beta_{i,l}$ and $\theta_{i,j,l,k}$ 
+can be extracted by running
 
 ```{r}
-coefs <- coef(cv_fit$glinternetFit)[[i1Std]]
+coefs <- coef(cv_fit$glinternetFit)[[i_1Std]]
 ```
 
 
-The output `coefs` is a list of 4 items: 
+`coefs` is a list of 4 items: 
 `mainEffects`, `mainEffectsCoef`, `interactions` and `interactionsCoef`.
 
+Let's look at the part without interactions first:
 The main effects identified are 
 
 ```{r}
 coefs$mainEffects
 ```
 
-that is, all of the 5 input variables for this small dataset. Their coefficients are in
-```{r, eval=FALSE}
-coefs$mainEffectsCoef$cat
-```
-which are as many numbers as correspond to `numLevels`. 
+which are the indices of the categorical variables and the continuous variables, 
+in order as they occur in the data. We get the indices via
 
-The interactions are between the following pairs of variables:
+```{r}
+idx_num <- (1:length(i_num))[i_num]
+idx_cat <- (1:length(i_num))[!i_num]
+names(numLevels)[idx_cat[coefs$mainEffects$cat]]
+names(numLevels)[idx_num[coefs$mainEffects$cont]]
+```
+
+The coefficients for these variables are:
+
+```{r}
+coefs$mainEffectsCoef
+```
+
+(I would have expected all of these to be positive; one should check why `HP` has a negative coefficient.)
+
+Now for the interaction pairs:
 
 ```{r}
 coefs$interactions
 ```
 
-that is, all variable pairs have been identified except (4,5). 
-The coefficients of the interactions are stored in 
+The above means: 
 
-```{r, eval=FALSE}
-coefs$interactionsCoef
-```
-
-and, for instance, the interaction coefficients for the second pair (1,3), i.e.
-(`r names(solder)[1]`, `r names(solder)[3]`) which have 3 and 4 levels, are 
+* There is no interaction between the categorical variables (unsurprising because we only identified one. If there was an interaction pair, we would access it via `coefs$interactionsCoef$catcat`, giving a list of matrices,
+  one matrix of dimension $L_i \times L_j$ for each pair.)
+* Two pairs of continuous variables have interactions: (5,9) and (11,20), which are 
+  (`r names(numLevels)[idx_num[c(5,9)]]`) and (`r names(numLevels)[idx_num[c(11,20)]]`). 
+  The coefficients for these interactions are 
 
 ```{r}
-coefs$interactionsCoef$catcat[[2]]
+coefs$interactionsCoef$contcont
 ```
 
-The model chosen at the 27th lambda value has a root mean squared error (RMSE) of
+* There is one interaction between categorical variable 3 and continuous variable 5, which are 
+  `r names(numLevels)[idx_cat[3]]` and `r names(numLevels)[idx_num[5]]`. 
+  The coefficients for this interaction are:
 
 ```{r}
-sqrt(cv_fit$cvErr[[i1Std]])
+coefs$interactionsCoef$catcont
 ```
+
+Our simple interaction network looks like this: 
+
+```{r, echo=FALSE}
+library(igraph)
+graph(
+  edges = c("Frt.Leg.Room", "HP", "Height", "Tank", "Rim", "Frt.Leg.Room"),
+  isolates = c("Length", "Gear.Ratio"),
+  dir = FALSE
+  ) %>% plot(vertex.size = 50, edge.width = 10)
+```
+
+
+The model has a root mean squared error (RMSE) on validation data of
+
+```{r}
+sqrt(cv_fit$cvErr[[i_1Std]])
+```
+
+
+### Compare to linear regression
 
 To quantify how much interactions have contributed to predictive power, 
-we fit a glmnet model below. 
-The best CV mean-squared error for the glmnet model is more than double:
+we now fit a glmnet model. 
+The best CV mean-squared error for the glmnet model is higher than the
+mean-squared error for glinternet:
 
 ```{r}
+df$Price <- y
+X <- model.matrix(Price ~ . - 1, df)
 library(glmnet)
-df <- solder
-X <- model.matrix(skips~ . -1, df)
-Y <- df$skips
-fit_glm <- cv.glmnet(x = X, y = Y, family="gaussian")
-i1se <- which(fit_glm$lambda.min == fit_glm$lambda)
-sqrt(fit_glm$cvm[i1se])
+cv_glmnet <- cv.glmnet(X,y)
+sqrt(min(cv_glmnet$cvm))
 ```
 
 
-### weather data
+## Take-home message
 
-```{r}
-df <- rpart::car90
-df <- df[!is.na(df$Price), ]
-i_num <- sapply(df, is.numeric)
-df[, !i_num] <- apply(df[, !i_num], 2, function(x) {
-  x[x==""] <- "empty"
-  x[is.na(x)] <- "missing"
-  x
-})
-df[, !i_num] <- apply(df[, !i_num], 2, factor) %>% as.data.frame()
-numLevels <- df %>% select(-Price) %>% sapply(nlevels)
-numLevels[numLevels==0] <- 1
-df[, !i_num] <- apply(df[, !i_num], 2, function(col) as.integer(as.factor(col)) - 1)
-df[, i_num] <- apply(df[, i_num], 2, function(x) ifelse(is.na(x), median(x, na.rm=T), x))
-X <- df %>% select(-Price) %>% as.matrix()
-y <- df$Price
-df
-```
-
-```{r}
-fit_tree <- rpart(Price ~., rpart::car90)
-y - predict(fit_tree, rpart::car90)
-```
+When you're using logistic or linear regression with Lasso regularization 
+as a baseline, and your next step is to see if adding interactions improve 
+predictive power: try glinternet!
 
 
+## References
 
+[Learning Interactions via Hierarchical Group-Lasso Regularization](https://doi.org/10.1080/10618600.2014.938812). Michael Lim & Trevor Hastie
 
-```{r}
-fit_cv <- glinternet.cv(X, y, numLevels, family = "gaussian")
-plot(fit_cv)
-sqrt(fit_cv$cvErr)
-y - fit_cv$glinternetFit$fitted[, 32]
-
-```
-
-
-
-### Deep Learning vs Logistic Regression on Structured Data
-
-Deep learning has been successfully applied to structured data, notably to problems where categorical variables have large numbers of categories. The key idea here is to embed these variables in a vector space, see e.g. 
-[Guo & Berkhahn (2016)](https://arxiv.org/abs/1604.06737)
-who came third in the 2015 "Rossmann Store Sales" kaggle competition. 
-Recently, Google have published an 
-[article](https://www.nature.com/articles/s41746-018-0029-1)
-where fancy RNNs achieve great classification performance on electronic medical health records; but at the same time, they managed to fit a regularized regression model with almost the same performance (see this interesting 
-[Twitter thread](https://twitter.com/ShalitUri/status/1009534668880928769)).
-This shows how logistic regression remains a useful baseline for many structured classification problems on structured data, even large ones. 
